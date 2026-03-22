@@ -42,6 +42,21 @@ def extract_text(payload: dict[str, Any]) -> str:
     return ujson.dumps(payload, indent=2)
 
 
+def build_api_error(response: requests.Response) -> str:
+    try:
+        payload = response.json()
+    except ValueError:
+        return f"HTTP {response.status_code}: {response.text.strip()}"
+
+    error = payload.get("error") if isinstance(payload, dict) else None
+    if isinstance(error, dict):
+        message = error.get("message") or "Unknown API error"
+        code = error.get("code") or response.status_code
+        return f"HTTP {response.status_code} ({code}): {message}"
+
+    return f"HTTP {response.status_code}: {payload}"
+
+
 class OpenRouterClient:
     def __init__(
         self,
@@ -64,5 +79,6 @@ class OpenRouterClient:
             data=ujson.dumps(payload),
             timeout=self.timeout,
         )
-        response.raise_for_status()
+        if not response.ok:
+            raise RuntimeError(build_api_error(response))
         return extract_text(response.json())

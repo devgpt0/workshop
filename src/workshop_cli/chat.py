@@ -17,13 +17,18 @@ MODE_ALIASES = {
 
 
 def run_single_prompt(prompt: str, client: OpenRouterClient, state: SessionState) -> int:
-    reply = client.send_chat(
-        model=state.current_model,
-        messages=build_messages(
-            system_prompt=state.system_prompt,
-            conversation=[{"role": "user", "content": prompt}],
-        ),
-    )
+    try:
+        reply = client.send_chat(
+            model=state.current_model,
+            messages=build_messages(
+                system_prompt=state.system_prompt,
+                conversation=[{"role": "user", "content": prompt}],
+            ),
+        )
+    except (requests.RequestException, RuntimeError) as exc:
+        print(f"System > Error: {exc}")
+        return 1
+
     print(reply)
     return 0
 
@@ -293,5 +298,8 @@ def run_interactive_chat(
 
         messages.append({"role": "assistant", "content": reply})
         print(f"\nAssistant > {reply}")
+
+
+
 
 
