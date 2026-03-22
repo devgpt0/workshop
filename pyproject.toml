@@ -1,0 +1,24 @@
+[project]
+name = "workshop"
+version = "0.1.0"
+description = "CLI application for sending prompts to OpenRouter."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+    "ujson>=5.10.0",
+]
+
+[project.scripts]
+workshop = "workshop_cli.cli:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
