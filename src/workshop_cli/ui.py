@@ -4,23 +4,34 @@ import sys
 from importlib.metadata import PackageNotFoundError, version
 
 
-APP_NAME = "Bootcoding"
-BORDER_COLOR = "38;5;209"
-ART_COLOR = "1;38;5;209"
-MUTED_COLOR = "38;5;223"
-BOOT_ART = [
-    "  █▀▀█  ▄▀▀▄  ▄▀▀▄  ▄▀▀▀▄",
-    "  █▀▀▄  █  █  █  █    █  ",
-    "  █  █  █  █  █  █    █  ",
-    "  ▀▀▀   ▀▀▀   ▀▀▀     ▀  ",
+APP_NAME = "GenAI"
+BORDER_COLOR = "1;38;5;117"
+TITLE_COLOR = "1;38;5;231"
+MUTED_COLOR = "38;5;224"
+ACCENT_COLOR = "1;38;5;219"
+ART_COLORS = [
+    "1;38;5;51",
+    "1;38;5;87",
+    "1;38;5;123",
+    "1;38;5;159",
+    "1;38;5;220",
+    "1;38;5;213",
 ]
-CODING_ART = [
-    "  ▄▀▀▀  ▄▀▀▄  █▀▀▄  ▀█▀  █▄  █  ▄▀▀▀",
-    "  █     █  █  █  █   █   █ ▀▄█  █ ▀█",
-    "  █▄▄▄  █  █  █  █   █   █  ▀█  █▄▄█",
-    "   ▀▀▀  ▀▀▀   ▀▀▀   ▀▀▀  ▀   ▀   ▀▀ ",
+BYTE_ART = [
+    "   ____ _____ _   _    _    ___ ",
+    "  / ___| ____| \\ | |  / \\  |_ _|",
+    " | |  _|  _| |  \\| | / _ \\  | | ",
+    " | |_| | |___| |\\  |/ ___ \\ | | ",
+    "  \\____|_____|_| \\_/_/   \\_\\___|",
 ]
-BOOTCODING_ART = BOOT_ART + [""] + CODING_ART
+CODE_ART = [
+    "    _    ___ ",
+    "   / \\  |_ _|",
+    "  / _ \\  | | ",
+    " / ___ \\ | | ",
+    "/_/   \\_\\___|",
+]
+BOOTCODING_ART = BYTE_ART + [""] + CODE_ART
 
 
 def supports_effects(no_effect: bool) -> bool:
@@ -52,20 +63,39 @@ def pad(text: str, width: int) -> str:
     return truncate(text, width).ljust(width)
 
 
+def colorize_art(text: str, row_index: int, no_effect: bool) -> str:
+    if not text.strip():
+        return text
+    if text.strip() == "Welcome back!":
+        return colorize(text, ACCENT_COLOR, no_effect)
+    return colorize(text, ART_COLORS[row_index % len(ART_COLORS)], no_effect)
+
+
 def render_border(inner_width: int, no_effect: bool, title: str | None = None) -> str:
     if not title:
         return colorize("+" + "-" * inner_width + "+", BORDER_COLOR, no_effect)
 
     prefix = f"+- {title} "
-    line = prefix + "-" * max(0, inner_width - len(prefix) + 1) + "+"
-    return colorize(line, BORDER_COLOR, no_effect)
+    suffix = "-" * max(0, inner_width - len(prefix) + 1) + "+"
+    return (
+        colorize("+- ", BORDER_COLOR, no_effect)
+        + colorize(title, TITLE_COLOR, no_effect)
+        + colorize(f" {suffix}", BORDER_COLOR, no_effect)
+    )
 
 
-def render_row(left: str, right: str, left_width: int, right_width: int, no_effect: bool) -> str:
+def render_row(
+    left: str,
+    right: str,
+    left_width: int,
+    right_width: int,
+    no_effect: bool,
+    row_index: int,
+) -> str:
     left_text = pad(left, left_width)
     right_text = pad(right, right_width)
     if left.strip():
-        left_text = colorize(left_text, ART_COLOR, no_effect)
+        left_text = colorize_art(left_text, row_index, no_effect)
     right_text = colorize(right_text, MUTED_COLOR, no_effect)
     return (
         f"{colorize('|', BORDER_COLOR, no_effect)} {left_text} "
@@ -105,8 +135,8 @@ def show_welcome_screen(model: str, mode: str, no_effect: bool) -> None:
     right_lines.extend([""] * (total_rows - len(right_lines)))
 
     print(render_border(inner_width, no_effect, title))
-    for left, right in zip(left_lines, right_lines):
-        print(render_row(left, right, left_width, right_width, no_effect))
+    for row_index, (left, right) in enumerate(zip(left_lines, right_lines)):
+        print(render_row(left, right, left_width, right_width, no_effect, row_index))
     print(render_border(inner_width, no_effect))
     print()
 
