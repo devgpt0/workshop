@@ -1,4 +1,3 @@
-import os
 import shutil
 import sys
 from importlib.metadata import PackageNotFoundError, version
@@ -8,19 +7,15 @@ APP_NAME = "Bootcoding"
 BORDER_COLOR = "38;5;209"
 ART_COLOR = "1;38;5;209"
 MUTED_COLOR = "38;5;223"
-BOOT_ART = [
-    "  █▀▀█  ▄▀▀▄  ▄▀▀▄  ▄▀▀▀▄",
-    "  █▀▀▄  █  █  █  █    █  ",
-    "  █  █  █  █  █  █    █  ",
-    "  ▀▀▀   ▀▀▀   ▀▀▀     ▀  ",
+DARK_PINK_COLOR = "1;38;5;161"
+BOOTCODING_ART = [
+    r"  ____              _                  _ _             ",
+    r" | __ )  ___   ___ | |_ ___ ___   __| (_) _ __   __ _ ",
+    r" |  _ \ / _ \ / _ \| __/ __/ _ \ / _` | || '_ \ / _` |",
+    r" | |_) | (_) | (_) | || (_| (_) | (_| | || | | | (_| |",
+    r" |____/ \___/ \___/ \__\___\___/ \__,_|_||_| |_|\__, |",
+    r"                                                |___/ ",
 ]
-CODING_ART = [
-    "  ▄▀▀▀  ▄▀▀▄  █▀▀▄  ▀█▀  █▄  █  ▄▀▀▀",
-    "  █     █  █  █  █   █   █ ▀▄█  █ ▀█",
-    "  █▄▄▄  █  █  █  █   █   █  ▀█  █▄▄█",
-    "   ▀▀▀  ▀▀▀   ▀▀▀   ▀▀▀  ▀   ▀   ▀▀ ",
-]
-BOOTCODING_ART = BOOT_ART + [""] + CODING_ART
 
 
 def supports_effects(no_effect: bool) -> bool:
@@ -65,7 +60,10 @@ def render_row(left: str, right: str, left_width: int, right_width: int, no_effe
     left_text = pad(left, left_width)
     right_text = pad(right, right_width)
     if left.strip():
-        left_text = colorize(left_text, ART_COLOR, no_effect)
+        if left in BOOTCODING_ART:
+            left_text = colorize(left_text, DARK_PINK_COLOR, no_effect)
+        else:
+            left_text = colorize(left_text, ART_COLOR, no_effect)
     right_text = colorize(right_text, MUTED_COLOR, no_effect)
     return (
         f"{colorize('|', BORDER_COLOR, no_effect)} {left_text} "
@@ -81,7 +79,7 @@ def show_welcome_screen(model: str, mode: str, no_effect: bool) -> None:
 
     term_width = shutil.get_terminal_size((120, 30)).columns
     inner_width = min(116, max(96, term_width - 4))
-    left_width = min(52, max(len(line) for line in BOOTCODING_ART) + 2)
+    left_width = min(62, max(len(line) for line in BOOTCODING_ART) + 2)
     right_width = inner_width - left_width - 3
     title = f"{APP_NAME} v{get_app_version()}"
 
