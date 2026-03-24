@@ -1,7 +1,6 @@
 # Workshop CLI
 
 Simple CLI for chatting with OpenRouter using `requests` and `ujson`.
-
 ## Setup
 
 1. Install `uv` with `pip`:
