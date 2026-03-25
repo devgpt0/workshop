@@ -8,8 +8,21 @@ class StubClient:
     def __init__(self, reply: str = "ok", error: Exception | None = None) -> None:
         self.reply = reply
         self.error = error
+        self.calls: list[dict[str, object]] = []
 
-    def send_chat(self, model: str, messages: list[dict[str, str]]) -> str:
+    def send_chat(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        require_exa_tool: bool = False,
+    ) -> str:
+        self.calls.append(
+            {
+                "model": model,
+                "messages": messages,
+                "require_exa_tool": require_exa_tool,
+            }
+        )
         if self.error is not None:
             raise self.error
         return self.reply
@@ -27,14 +40,17 @@ def test_normalize_mode_accepts_alias_and_index() -> None:
     assert normalize_mode("think") == "thinking"
     assert normalize_mode("2") == "plan"
     assert normalize_mode("9") is None
+    assert normalize_mode("browser") is None
 
 
 def test_run_single_prompt_success_prints_reply(capsys) -> None:
-    code = run_single_prompt("Hello", StubClient(reply="Hi"), _state())
+    client = StubClient(reply="Hi")
+    code = run_single_prompt("Hello", client, _state())
 
     captured = capsys.readouterr()
     assert code == 0
     assert "Hi" in captured.out
+    assert client.calls[0]["require_exa_tool"] is False
 
 
 def test_run_single_prompt_handles_request_error(capsys) -> None:

@@ -33,6 +33,8 @@ def main() -> int:
         timeout=settings.timeout,
         site_url=settings.site_url,
         site_name=settings.site_name,
+        exa_api_key=settings.exa_api_key,
+        exa_num_results=settings.exa_num_results,
     )
     state = SessionState(
         current_mode="chat",

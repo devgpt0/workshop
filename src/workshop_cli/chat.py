@@ -319,7 +319,7 @@ def run_interactive_chat(
                 model=state.current_model,
                 messages=build_messages(state.system_prompt, messages),
             )
-        except requests.RequestException as exc:
+        except (requests.RequestException, RuntimeError) as exc:
             messages.pop()
             print(f"System > Error: {exc}")
             continue

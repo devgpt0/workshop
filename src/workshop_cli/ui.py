@@ -3,34 +3,34 @@ import sys
 from importlib.metadata import PackageNotFoundError, version
 
 
-APP_NAME = "GenAI"
-BORDER_COLOR = "1;38;5;117"
-TITLE_COLOR = "1;38;5;231"
-MUTED_COLOR = "38;5;224"
-ACCENT_COLOR = "1;38;5;219"
+APP_NAME = "AGENTIC WORKSHOP"
+BORDER_COLOR = "1;38;5;220"
+TITLE_COLOR = "1;38;5;214"
+MUTED_COLOR = "38;5;223"
+ACCENT_COLOR = "1;38;5;220"
+
 ART_COLORS = [
-    "1;38;5;51",
-    "1;38;5;87",
-    "1;38;5;123",
-    "1;38;5;159",
+    "1;38;5;223",
     "1;38;5;220",
-    "1;38;5;213",
 ]
-BYTE_ART = [
-    "   ____ _____ _   _    _    ___ ",
-    "  / ___| ____| \\ | |  / \\  |_ _|",
-    " | |  _|  _| |  \\| | / _ \\  | | ",
-    " | |_| | |___| |\\  |/ ___ \\ | | ",
-    "  \\____|_____|_| \\_/_/   \\_\\___|",
+
+AGENTIC_ART = [
+    "  █████   ██████  ███████ ███    ██ ████████ ██  ██████ ",
+    " ██   ██ ██       ██      ████   ██    ██    ██ ██      ",
+    " ███████ ██   ███ █████   ██ ██  ██    ██    ██ ██      ",
+    " ██   ██ ██    ██ ██      ██  ██ ██    ██    ██ ██      ",
+    " ██   ██  ██████  ███████ ██   ████    ██    ██  ██████ ",
 ]
-CODE_ART = [
-    "    _    ___ ",
-    "   / \\  |_ _|",
-    "  / _ \\  | | ",
-    " / ___ \\ | | ",
-    "/_/   \\_\\___|",
+
+CHAT_ART = [
+    "  ██████ ██   ██  █████  ████████ ",
+    " ██      ██   ██ ██   ██    ██    ",
+    " ██      ███████ ███████    ██    ",
+    " ██      ██   ██ ██   ██    ██    ",
+    "  ██████ ██   ██ ██   ██    ██    ",
 ]
-BOOTCODING_ART = BYTE_ART + [""] + CODE_ART
+
+BOOTCODING_ART = [""] + AGENTIC_ART + [""] + CHAT_ART
 
 
 def supports_effects(no_effect: bool) -> bool:
@@ -84,7 +84,12 @@ def render_border(inner_width: int, no_effect: bool, title: str | None = None) -
 
 
 def render_row(
-    left: str, right: str, left_width: int, right_width: int, no_effect: bool
+    left: str,
+    right: str,
+    left_width: int,
+    right_width: int,
+    no_effect: bool,
+    row_index: int,
 ) -> str:
     left_text = pad(left, left_width)
     right_text = pad(right, right_width)
@@ -104,9 +109,14 @@ def show_welcome_screen(model: str, mode: str, no_effect: bool) -> None:
         return
 
     term_width = shutil.get_terminal_size((120, 30)).columns
-    inner_width = min(116, max(96, term_width - 4))
-    left_width = min(52, max(len(line) for line in BOOTCODING_ART) + 2)
+    inner_width = min(120, max(100, term_width - 4))
+
+    required_left = max(len(line) for line in BOOTCODING_ART) + 2
+    min_right = 28
+    available_left = inner_width - 3 - min_right
+    left_width = min(required_left, max(24, available_left))
     right_width = inner_width - left_width - 3
+
     title = f"{APP_NAME} v{get_app_version()}"
 
     right_lines = [
@@ -148,4 +158,3 @@ def print_chat_help() -> None:
     print("  /system reset                 Reset the system prompt")
     print("  /clear                        Start a fresh conversation")
     print("  /exit                         Quit the chat")
-

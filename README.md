@@ -1,6 +1,7 @@
-# Workshop CLI
+﻿# Workshop CLI
 
 Simple CLI for chatting with OpenRouter using `requests` and `ujson`.
+
 ## Setup
 
 1. Install `uv` with `pip`:
@@ -16,10 +17,12 @@ OPENROUTER_API_KEY=your_api_key_here
 OPENROUTER_MODEL=openrouter/free
 OPENROUTER_MODELS=openrouter/free,openai/gpt-oss-20b:free,openai/gpt-oss-120b:free,minimax/minimax-m2.7
 OPENROUTER_TIMEOUT=30
+EXA_API_KEY=your_exa_api_key_here
+EXA_NUM_RESULTS=5
 WORKSHOP_NO_EFFECT=0
 ```
 
-Only these variables are used by the project.
+These are the primary variables used by the project. `EXA_API_KEY` is optional; if set, Exa web search is available as a tool call in all modes.
 
 3. Install the project dependencies:
 
@@ -54,7 +57,7 @@ These scripts run:
 uv run workshop
 ```
 
-This starts a continuous terminal chat session with a Bootcoding welcome screen.
+This starts a continuous terminal chat session with a welcome screen.
 
 Commands inside chat:
 

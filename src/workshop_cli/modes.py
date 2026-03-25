@@ -1,21 +1,26 @@
 from dataclasses import dataclass, field
 
 
+EXA_TOOL_HINT = "When a question depends on current web information or niche internet sources, call the exa_search tool before answering."
+
 MODE_DETAILS = {
     "chat": {
         "label": "Chat",
         "capability": "Natural back-and-forth conversation and general assistance.",
-        "system_prompt": "You are Assistant in chat mode. Be clear, helpful, and conversational.",
+        "system_prompt": "You are Assistant in chat mode. Be clear, helpful, and conversational. "
+        + EXA_TOOL_HINT,
     },
     "plan": {
         "label": "Plan",
         "capability": "Structured planning, task breakdowns, milestones, and execution order.",
-        "system_prompt": "You are Assistant in plan mode. Focus on planning, sequencing, and clear next steps before implementation.",
+        "system_prompt": "You are Assistant in plan mode. Focus on planning, sequencing, and clear next steps before implementation. "
+        + EXA_TOOL_HINT,
     },
     "thinking": {
         "label": "Think",
         "capability": "Deeper reasoning, tradeoff analysis, and careful problem solving.",
-        "system_prompt": "You are Assistant in thinking mode. Think carefully, explain tradeoffs, and give rigorous reasoning.",
+        "system_prompt": "You are Assistant in thinking mode. Think carefully, explain tradeoffs, and give rigorous reasoning. "
+        + EXA_TOOL_HINT,
     },
 }
 

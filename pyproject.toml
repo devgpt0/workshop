@@ -5,6 +5,7 @@ description = "CLI application for sending prompts to OpenRouter."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "exa-py>=2.10.1",
     "python-dotenv>=1.0.1",
     "requests>=2.32.3",
     "ujson>=5.10.0",
