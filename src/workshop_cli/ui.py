@@ -84,7 +84,7 @@ def render_border(inner_width: int, no_effect: bool, title: str | None = None) -
 
 
 def render_row(
-    left: str, right: str, left_width: int, right_width: int, no_effect: bool
+    left: str, right: str, left_width: int, right_width: int, no_effect: bool, row_index: int
 ) -> str:
     left_text = pad(left, left_width)
     right_text = pad(right, right_width)
@@ -130,7 +130,7 @@ def show_welcome_screen(model: str, mode: str, no_effect: bool) -> None:
 
     print(render_border(inner_width, no_effect, title))
     for row_index, (left, right) in enumerate(zip(left_lines, right_lines)):
-        print(render_row(left, right, left_width, right_width, no_effect, row_index))
+        print(render_row(left, right, left_width, right_width, no_effect,row_index))
     print(render_border(inner_width, no_effect))
     print()
 
