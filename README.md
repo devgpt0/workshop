@@ -1,7 +1,6 @@
 # Workshop CLI
 
 Simple CLI for chatting with OpenRouter using `requests` and `ujson`.
-
 ## Setup
 
 1. Install `uv` with `pip`:
@@ -27,6 +26,27 @@ Only these variables are used by the project.
 ```bash
 uv sync
 ```
+
+## Local Code Checks
+
+Run all pre-push checks locally:
+
+Windows (CMD/PowerShell):
+
+```bat
+scripts\run_check.bat
+```
+
+Bash (Linux/macOS/WSL):
+
+```bash
+bash scripts/run_check.sh
+```
+
+These scripts run:
+- `uv run ruff format --check .`
+- `uv run ruff check .`
+- `uv run pytest -q`
 
 ## Usage
 

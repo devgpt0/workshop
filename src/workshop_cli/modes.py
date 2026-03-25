@@ -31,8 +31,7 @@ class SessionState:
     def __post_init__(self) -> None:
         if not self.mode_prompts:
             self.mode_prompts = {
-                name: details["system_prompt"]
-                for name, details in MODE_DETAILS.items()
+                name: details["system_prompt"] for name, details in MODE_DETAILS.items()
             }
 
     @property
@@ -62,8 +61,12 @@ class SessionState:
         self.mode_prompts[self.current_mode] = prompt
 
     def reset_system_prompt(self) -> None:
-        self.mode_prompts[self.current_mode] = MODE_DETAILS[self.current_mode]["system_prompt"]
+        self.mode_prompts[self.current_mode] = MODE_DETAILS[self.current_mode][
+            "system_prompt"
+        ]
 
 
-def build_messages(system_prompt: str, conversation: list[dict[str, str]]) -> list[dict[str, str]]:
+def build_messages(
+    system_prompt: str, conversation: list[dict[str, str]]
+) -> list[dict[str, str]]:
     return [{"role": "system", "content": system_prompt}, *conversation]
