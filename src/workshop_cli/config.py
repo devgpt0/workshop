@@ -31,7 +31,9 @@ def load_settings() -> Settings:
 
     api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
-        raise ValueError("OPENROUTER_API_KEY is not set. Add it to your environment or .env file.")
+        raise ValueError(
+            "OPENROUTER_API_KEY is not set. Add it to your environment or .env file."
+        )
 
     model = os.getenv("OPENROUTER_MODEL", DEFAULT_MODEL)
     return Settings(

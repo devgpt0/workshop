@@ -1,4 +1,3 @@
-import os
 import shutil
 import sys
 from importlib.metadata import PackageNotFoundError, version
@@ -61,7 +60,9 @@ def render_border(inner_width: int, no_effect: bool, title: str | None = None) -
     return colorize(line, BORDER_COLOR, no_effect)
 
 
-def render_row(left: str, right: str, left_width: int, right_width: int, no_effect: bool) -> str:
+def render_row(
+    left: str, right: str, left_width: int, right_width: int, no_effect: bool
+) -> str:
     left_text = pad(left, left_width)
     right_text = pad(right, right_width)
     if left.strip():

@@ -7,7 +7,9 @@ import ujson
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
-def build_headers(api_key: str, site_url: str | None, site_name: str | None) -> dict[str, str]:
+def build_headers(
+    api_key: str, site_url: str | None, site_name: str | None
+) -> dict[str, str]:
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",

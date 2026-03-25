@@ -16,7 +16,9 @@ MODE_ALIASES = {
 }
 
 
-def run_single_prompt(prompt: str, client: OpenRouterClient, state: SessionState) -> int:
+def run_single_prompt(
+    prompt: str, client: OpenRouterClient, state: SessionState
+) -> int:
     try:
         reply = client.send_chat(
             model=state.current_model,
@@ -103,13 +105,19 @@ def setup_session(state: SessionState) -> bool:
     else:
         print("System > Using the default system prompt.")
 
-    print(f"System > Session ready for {state.user_label} in {state.current_mode} mode.")
+    print(
+        f"System > Session ready for {state.user_label} in {state.current_mode} mode."
+    )
     return True
 
 
-def select_mode_interactively(messages: list[dict[str, str]], state: SessionState) -> None:
+def select_mode_interactively(
+    messages: list[dict[str, str]], state: SessionState
+) -> None:
     show_modes(state)
-    choice = prompt_choice("System > Select mode number or name (Enter to keep current): ")
+    choice = prompt_choice(
+        "System > Select mode number or name (Enter to keep current): "
+    )
     if choice is None:
         print(f"System > Mode unchanged: {state.current_mode}")
         return
@@ -124,10 +132,14 @@ def select_mode_interactively(messages: list[dict[str, str]], state: SessionStat
     print("System > Invalid mode selection.")
 
 
-def select_model_interactively(messages: list[dict[str, str]], state: SessionState) -> None:
+def select_model_interactively(
+    messages: list[dict[str, str]], state: SessionState
+) -> None:
     show_models(state)
     print("System > Use /models add <model> to register a new model.")
-    choice = prompt_choice("System > Select model number or exact name (Enter to keep current): ")
+    choice = prompt_choice(
+        "System > Select model number or exact name (Enter to keep current): "
+    )
     if choice is None:
         print(f"System > Model unchanged: {state.current_model}")
         return
@@ -148,10 +160,14 @@ def select_model_interactively(messages: list[dict[str, str]], state: SessionSta
     print("System > Invalid model selection.")
 
 
-def edit_system_prompt_interactively(messages: list[dict[str, str]], state: SessionState) -> None:
+def edit_system_prompt_interactively(
+    messages: list[dict[str, str]], state: SessionState
+) -> None:
     print(f"System > Current system prompt for {state.current_mode} mode:")
     print(state.system_prompt)
-    print("System > Enter a new prompt, type reset to restore default, or press Enter to keep current.")
+    print(
+        "System > Enter a new prompt, type reset to restore default, or press Enter to keep current."
+    )
     choice = prompt_choice("System > ")
     if choice is None:
         print("System > System prompt unchanged.")
@@ -160,12 +176,16 @@ def edit_system_prompt_interactively(messages: list[dict[str, str]], state: Sess
     if choice.lower() == "reset":
         state.reset_system_prompt()
         messages.clear()
-        print(f"System > System prompt reset for {state.current_mode} mode. Conversation cleared.")
+        print(
+            f"System > System prompt reset for {state.current_mode} mode. Conversation cleared."
+        )
         return
 
     state.set_system_prompt(choice)
     messages.clear()
-    print(f"System > System prompt updated for {state.current_mode} mode. Conversation cleared.")
+    print(
+        f"System > System prompt updated for {state.current_mode} mode. Conversation cleared."
+    )
 
 
 def handle_command(
@@ -204,7 +224,9 @@ def handle_command(
         if len(parts) >= 3 and parts[1].lower() == "use":
             model = parts[2].strip()
             if model not in state.available_models:
-                print("System > Model not available. Add it first with /models add <model>")
+                print(
+                    "System > Model not available. Add it first with /models add <model>"
+                )
                 return True
             state.set_model(model)
             messages.clear()
@@ -234,7 +256,9 @@ def handle_command(
         if action == "reset":
             state.reset_system_prompt()
             messages.clear()
-            print(f"System > System prompt reset for {state.current_mode} mode. Conversation cleared.")
+            print(
+                f"System > System prompt reset for {state.current_mode} mode. Conversation cleared."
+            )
             return True
 
         new_prompt = user_input[len("/system ") :].strip()
@@ -244,7 +268,9 @@ def handle_command(
 
         state.set_system_prompt(new_prompt)
         messages.clear()
-        print(f"System > System prompt updated for {state.current_mode} mode. Conversation cleared.")
+        print(
+            f"System > System prompt updated for {state.current_mode} mode. Conversation cleared."
+        )
         return True
 
     if command == "/help":
@@ -260,8 +286,10 @@ def run_interactive_chat(
     no_effect: bool,
 ) -> int:
     messages: list[dict[str, str]] = []
-    show_welcome_screen(model=state.current_model, mode=state.current_mode, no_effect=no_effect)
-    if not setup_session(state): 
+    show_welcome_screen(
+        model=state.current_model, mode=state.current_mode, no_effect=no_effect
+    )
+    if not setup_session(state):
         return 0
     print("System > Type a message to start chatting or use /help for commands.")
 
@@ -298,8 +326,3 @@ def run_interactive_chat(
 
         messages.append({"role": "assistant", "content": reply})
         print(f"\nAssistant > {reply}")
-
-
-
-
-
