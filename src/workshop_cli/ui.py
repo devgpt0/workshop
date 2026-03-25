@@ -61,7 +61,14 @@ def render_border(inner_width: int, no_effect: bool, title: str | None = None) -
     return colorize(line, BORDER_COLOR, no_effect)
 
 
-def render_row(left: str, right: str, left_width: int, right_width: int, no_effect: bool) -> str:
+def render_row(
+    left: str,
+    right: str,
+    left_width: int,
+    right_width: int,
+    no_effect: bool,
+    row_index: int,
+) -> str:
     left_text = pad(left, left_width)
     right_text = pad(right, right_width)
     if left.strip():
@@ -105,8 +112,8 @@ def show_welcome_screen(model: str, mode: str, no_effect: bool) -> None:
     right_lines.extend([""] * (total_rows - len(right_lines)))
 
     print(render_border(inner_width, no_effect, title))
-    for left, right in zip(left_lines, right_lines):
-        print(render_row(left, right, left_width, right_width, no_effect))
+    for row_index, (left, right) in enumerate(zip(left_lines, right_lines)):
+        print(render_row(left, right, left_width, right_width, no_effect, row_index))
     print(render_border(inner_width, no_effect))
     print()
 
