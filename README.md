@@ -28,6 +28,27 @@ Only these variables are used by the project.
 uv sync
 ```
 
+## Local Code Checks
+
+Run all pre-push checks locally:
+
+Windows (CMD/PowerShell):
+
+```bat
+scripts\run_check.bat
+```
+
+Bash (Linux/macOS/WSL):
+
+```bash
+bash scripts/run_check.sh
+```
+
+These scripts run:
+- `uv run ruff format --check .`
+- `uv run ruff check .`
+- `uv run pytest -q`
+
 ## Usage
 
 ```bash
