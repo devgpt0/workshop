@@ -1,4 +1,4 @@
-from workshop_cli.tools.registry import build_tool_schemas, default_tool_choice
+from agentic_chat.tools.registry import build_tool_schemas, default_tool_choice
 
 
 def test_build_tool_schemas_includes_datetime_always() -> None:

@@ -3,7 +3,7 @@ from typing import Any
 
 from exa_py import Exa
 
-from workshop_cli.tools import datetime_tool, exa_tool
+from agentic_chat.tools import datetime_tool, exa_tool
 
 DATE_TIME_PHRASES = (
     "what is today's date",

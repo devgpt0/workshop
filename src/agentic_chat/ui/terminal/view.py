@@ -3,7 +3,7 @@ import sys
 from importlib.metadata import PackageNotFoundError, version
 
 
-APP_NAME = "AGENTIC WORKSHOP"
+APP_NAME = "AGENTIC CHAT"
 BORDER_COLOR = "1;38;5;220"
 TITLE_COLOR = "1;38;5;214"
 MUTED_COLOR = "38;5;223"
@@ -45,7 +45,7 @@ def colorize(text: str, code: str, no_effect: bool) -> str:
 
 def get_app_version() -> str:
     try:
-        return version("workshop")
+        return version("agentic-chat")
     except PackageNotFoundError:
         return "dev"
 

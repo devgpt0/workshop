@@ -1,6 +1,6 @@
 import pytest
 
-from workshop_cli.config import load_settings, parse_models
+from agentic_chat.core.config import load_settings, parse_models
 
 
 def test_parse_models_uses_fallback_when_missing() -> None:

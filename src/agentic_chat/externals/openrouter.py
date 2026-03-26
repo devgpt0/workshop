@@ -1,10 +1,11 @@
+from collections.abc import Callable
 from typing import Any
 
 import requests
 import ujson
 from exa_py import Exa
 
-from workshop_cli.tools import build_tool_schemas, default_tool_choice, execute_tool
+from agentic_chat.tools import build_tool_schemas, default_tool_choice, execute_tool
 
 
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -40,13 +41,13 @@ def parse_tool_arguments(raw_arguments: str | None) -> dict[str, Any]:
 def extract_text(payload: dict[str, Any]) -> str:
     choices = payload.get("choices") or []
     if not choices:
-        return ujson.dumps(payload, indent=2)
+        return ""
 
     message = choices[0].get("message") or {}
     content = message.get("content")
 
     if isinstance(content, str):
-        return content
+        return content.strip()
 
     if isinstance(content, list):
         parts = [
@@ -54,10 +55,31 @@ def extract_text(payload: dict[str, Any]) -> str:
             for part in content
             if isinstance(part, dict) and part.get("type") == "text"
         ]
+        joined = "\n".join(part for part in parts if isinstance(part, str)).strip()
+        if joined:
+            return joined
+
+    return ""
+
+
+def extract_reasoning(message: dict[str, Any]) -> str:
+    reasoning = message.get("reasoning")
+    if isinstance(reasoning, str) and reasoning.strip():
+        return reasoning.strip()
+
+    details = message.get("reasoning_details")
+    if isinstance(details, list):
+        parts: list[str] = []
+        for item in details:
+            if not isinstance(item, dict):
+                continue
+            text = item.get("text")
+            if isinstance(text, str) and text.strip():
+                parts.append(text.strip())
         if parts:
             return "\n".join(parts)
 
-    return ujson.dumps(payload, indent=2)
+    return ""
 
 
 def build_api_error(response: requests.Response) -> str:
@@ -107,6 +129,7 @@ class OpenRouterClient:
         model: str,
         messages: list[dict[str, Any]],
         require_exa_tool: bool = False,
+        on_event: Callable[[dict[str, Any]], None] | None = None,
     ) -> str:
         if require_exa_tool and not self.exa_api_key:
             raise RuntimeError(
@@ -133,6 +156,8 @@ class OpenRouterClient:
                 "function": {"name": "exa_search"},
             }
 
+        did_plaintext_retry = False
+
         for round_index in range(MAX_TOOL_ROUNDS):
             payload: dict[str, Any] = {
                 "model": model,
@@ -146,13 +171,46 @@ class OpenRouterClient:
 
             choices = response_payload.get("choices") or []
             if not choices:
-                return extract_text(response_payload)
+                if did_plaintext_retry:
+                    return (
+                        "I could not generate a clean response. Please try again or "
+                        "switch to a different model."
+                    )
+                did_plaintext_retry = True
+                conversation.append(
+                    {
+                        "role": "user",
+                        "content": "Provide only the final answer to the user's last question in plain text.",
+                    }
+                )
+                continue
 
             message = choices[0].get("message") or {}
             tool_calls = message.get("tool_calls") or []
+            reasoning = extract_reasoning(message)
+
+            if on_event and reasoning:
+                on_event({"type": "thinking", "message": reasoning})
 
             if not tool_calls:
-                return extract_text(response_payload)
+                final_text = extract_text(response_payload)
+                if final_text:
+                    return final_text
+
+                if did_plaintext_retry:
+                    return (
+                        "I could not generate a clean response. Please try again or "
+                        "switch to a different model."
+                    )
+
+                did_plaintext_retry = True
+                conversation.append(
+                    {
+                        "role": "user",
+                        "content": "Provide only the final answer to the user's last question in plain text.",
+                    }
+                )
+                continue
 
             conversation.append(
                 {
@@ -168,12 +226,24 @@ class OpenRouterClient:
                 arguments = parse_tool_arguments(function.get("arguments"))
                 tool_call_id = tool_call.get("id")
 
+                if on_event:
+                    on_event(
+                        {
+                            "type": "tool_call",
+                            "tool": name,
+                            "arguments": arguments,
+                        }
+                    )
+
                 tool_output = execute_tool(
                     tool_name=name,
                     arguments=arguments,
                     exa_client=self._exa_client,
                     exa_num_results=self.exa_num_results,
                 )
+
+                if on_event:
+                    on_event({"type": "tool_result", "tool": name})
 
                 conversation.append(
                     {

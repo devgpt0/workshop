@@ -1,7 +1,11 @@
 import requests
 
-from workshop_cli.chat import handle_command, normalize_mode, run_single_prompt
-from workshop_cli.modes import SessionState
+from agentic_chat.ui.terminal.chat import (
+    handle_command,
+    normalize_mode,
+    run_single_prompt,
+)
+from agentic_chat.core.modes import SessionState
 
 
 class StubClient:

@@ -1,4 +1,4 @@
-from workshop_cli.modes import MODE_DETAILS, SessionState, build_messages
+from agentic_chat.core.modes import MODE_DETAILS, SessionState, build_messages
 
 
 def test_session_state_defaults_system_prompts() -> None:
