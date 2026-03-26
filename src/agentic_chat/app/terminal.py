@@ -1,27 +1,27 @@
 import argparse
 
-from workshop_cli.chat import run_interactive_chat, run_single_prompt
-from workshop_cli.client import OpenRouterClient
-from workshop_cli.config import load_settings
-from workshop_cli.modes import SessionState
+from agentic_chat.externals.openrouter import OpenRouterClient
+from agentic_chat.core.config import load_settings
+from agentic_chat.core.modes import SessionState
+from agentic_chat.ui.terminal.chat import run_interactive_chat, run_single_prompt
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="workshop",
-        description="Chat with OpenRouter from the terminal.",
+        prog="agentic-chat",
+        description="Run Agentic Chat terminal UI.",
     )
     parser.add_argument(
         "prompt",
         nargs="*",
-        help="Optional first prompt. Leave empty to start interactive chat mode.",
+        help="Optional terminal prompt. Leave empty to start interactive terminal mode.",
     )
     return parser
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         settings = load_settings()
@@ -33,6 +33,8 @@ def main() -> int:
         timeout=settings.timeout,
         site_url=settings.site_url,
         site_name=settings.site_name,
+        exa_api_key=settings.exa_api_key,
+        exa_num_results=settings.exa_num_results,
     )
     state = SessionState(
         current_mode="chat",

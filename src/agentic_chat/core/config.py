@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 
 DEFAULT_MODEL = "openrouter/free"
+DEFAULT_EXA_RESULTS = 5
 
 
 @dataclass(frozen=True)
@@ -16,6 +17,8 @@ class Settings:
     timeout: float
     no_effect: bool
     available_models: tuple[str, ...]
+    exa_api_key: str | None
+    exa_num_results: int
 
 
 def parse_models(raw_value: str | None, fallback: str) -> tuple[str, ...]:
@@ -24,6 +27,21 @@ def parse_models(raw_value: str | None, fallback: str) -> tuple[str, ...]:
 
     models = tuple(part.strip() for part in raw_value.split(",") if part.strip())
     return models or (fallback,)
+
+
+def _parse_exa_num_results(raw_value: str | None) -> int:
+    if not raw_value:
+        return DEFAULT_EXA_RESULTS
+
+    try:
+        parsed = int(raw_value)
+    except ValueError as exc:
+        raise ValueError("EXA_NUM_RESULTS must be an integer.") from exc
+
+    if parsed < 1:
+        raise ValueError("EXA_NUM_RESULTS must be at least 1.")
+
+    return parsed
 
 
 def load_settings() -> Settings:
@@ -44,4 +62,6 @@ def load_settings() -> Settings:
         timeout=float(os.getenv("OPENROUTER_TIMEOUT", "30")),
         no_effect=os.getenv("WORKSHOP_NO_EFFECT") == "1",
         available_models=parse_models(os.getenv("OPENROUTER_MODELS"), model),
+        exa_api_key=os.getenv("EXA_API_KEY"),
+        exa_num_results=_parse_exa_num_results(os.getenv("EXA_NUM_RESULTS")),
     )

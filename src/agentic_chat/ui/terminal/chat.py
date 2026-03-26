@@ -1,8 +1,8 @@
 import requests
 
-from workshop_cli.client import OpenRouterClient
-from workshop_cli.modes import MODE_DETAILS, SessionState, build_messages
-from workshop_cli.ui import print_chat_help, show_welcome_screen
+from agentic_chat.externals.openrouter import OpenRouterClient
+from agentic_chat.core.modes import MODE_DETAILS, SessionState, build_messages
+from agentic_chat.ui.terminal.view import print_chat_help, show_welcome_screen
 
 
 EXIT_COMMANDS = {"/exit", "/quit", "exit", "quit"}
@@ -319,7 +319,7 @@ def run_interactive_chat(
                 model=state.current_model,
                 messages=build_messages(state.system_prompt, messages),
             )
-        except requests.RequestException as exc:
+        except (requests.RequestException, RuntimeError) as exc:
             messages.pop()
             print(f"System > Error: {exc}")
             continue
