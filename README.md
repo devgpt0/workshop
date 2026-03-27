@@ -141,6 +141,7 @@ WORKSHOP_NO_EFFECT=0
 ```
 
 3. Put your knowledge files (`.md`, `.txt`, `.json`, `.csv`, `.rst`) into `rag/data`.
+   Relative `RAG_DATA_DIR` values are resolved from the `workshop/` project root, so `rag/data` works even if you launch `agentic-chat` from the parent directory.
 
 4. Install dependencies:
 
@@ -153,6 +154,7 @@ uv sync
 - Prefer Markdown files for better readability and retrieval quality.
 - Keep long stories/content split into multiple chunk files under a folder like `rag/data/<topic>_chunks/`.
 - Qdrant index is in-memory, so restart requires reindexing.
+- If you want to point RAG at another folder, set `RAG_DATA_DIR` to either an absolute path or a path relative to `workshop/`.
 
 ## Run Terminal UI
 

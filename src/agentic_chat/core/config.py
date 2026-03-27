@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -10,6 +11,8 @@ DEFAULT_EMBEDDING_MODEL = "openai/text-embedding-3-small"
 DEFAULT_RAG_TOP_K = 4
 DEFAULT_RAG_CHUNK_SIZE = 800
 DEFAULT_RAG_CHUNK_OVERLAP = 120
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_ENV_PATH = PROJECT_ROOT / ".env"
 
 
 @dataclass(frozen=True)
@@ -29,6 +32,13 @@ class Settings:
     rag_top_k: int = DEFAULT_RAG_TOP_K
     rag_chunk_size: int = DEFAULT_RAG_CHUNK_SIZE
     rag_chunk_overlap: int = DEFAULT_RAG_CHUNK_OVERLAP
+
+
+def _resolve_project_path(raw_value: str, *, project_root: Path = PROJECT_ROOT) -> str:
+    candidate = Path(raw_value).expanduser()
+    if candidate.is_absolute():
+        return str(candidate)
+    return str((project_root / candidate).resolve())
 
 
 def parse_models(raw_value: str | None, fallback: str) -> tuple[str, ...]:
@@ -70,7 +80,7 @@ def _parse_positive_int(raw_value: str | None, name: str, fallback: int) -> int:
 
 
 def load_settings() -> Settings:
-    load_dotenv()
+    load_dotenv(dotenv_path=DEFAULT_ENV_PATH)
 
     api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
@@ -90,7 +100,7 @@ def load_settings() -> Settings:
         exa_api_key=os.getenv("EXA_API_KEY"),
         exa_num_results=_parse_exa_num_results(os.getenv("EXA_NUM_RESULTS")),
         rag_enabled=os.getenv("RAG_ENABLED", "1") != "0",
-        rag_data_dir=os.getenv("RAG_DATA_DIR", "rag/data"),
+        rag_data_dir=_resolve_project_path(os.getenv("RAG_DATA_DIR", "rag/data")),
         embedding_model=os.getenv(
             "OPENROUTER_EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL
         ),
