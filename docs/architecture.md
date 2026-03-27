@@ -1,13 +1,14 @@
-﻿# Architecture
+# Architecture
 
 ## Overview
 
-Agentic Chat is organized into layers so UI concerns, business logic, external integrations, and tool execution remain separated.
+Agentic Chat is organized into layers so UI concerns, business logic, RAG indexing/retrieval, external integrations, and tool execution remain separated.
 
 ```text
 UI (terminal / web)
   -> app entrypoint
     -> core state/config
+      -> RAG pipeline (optional, in-memory Qdrant)
       -> client(OpenRouter)
         -> tools registry
           -> concrete tools (Exa, datetime)
@@ -18,13 +19,16 @@ UI (terminal / web)
 ### 1) UI Layer
 
 - `src/agentic_chat/ui/terminal/`
-  - Handles terminal interactions and rendering.
+  - Terminal interactions, commands, and rendering.
+  - Includes runtime RAG controls (`/rag on`, `/rag off`, `/rag reindex`, `/rag status`).
 - `src/agentic_chat/ui/web/`
   - Streamlit app and web session flow.
+  - Includes sidebar RAG toggle and reindex button with live counts.
 
 Responsibilities:
 - collect user input
 - display assistant output
+- allow enabling/disabling RAG at runtime
 - delegate model execution to client/services
 
 ### 2) Application Layer
@@ -46,8 +50,26 @@ Responsibilities:
 Responsibilities:
 - central settings model + env validation
 - mode definitions and session state
+- RAG-related configuration (`RAG_*`, embedding model)
 
-### 4) Externals Layer
+### 4) RAG Layer
+
+- `src/agentic_chat/rag/bootstrap.py`
+- `src/agentic_chat/rag/embeddings.py`
+- `src/agentic_chat/rag/pipeline.py`
+- `rag/data/` knowledge folder
+
+Responsibilities:
+- read local knowledge files from `rag/data`
+- create embeddings via OpenRouter embeddings API
+- build/rebuild in-memory Qdrant collection
+- retrieve top-k relevant chunks and inject as grounding context
+
+Notes:
+- index is in-memory (`QdrantClient(location=":memory:")`)
+- markdown chunk files (for example `rag/data/fairy_tale_rag_chunks/*.md`) improve retrieval precision
+
+### 5) Externals Layer
 
 - `src/agentic_chat/externals/openrouter.py`
 
@@ -56,7 +78,7 @@ Responsibilities:
 - process tool calls from model output
 - append tool results into conversation
 
-### 5) Tools Layer
+### 6) Tools Layer
 
 - `src/agentic_chat/tools/registry.py`
 - `src/agentic_chat/tools/exa_tool.py`
@@ -66,6 +88,15 @@ Responsibilities:
 - determine likely tool triggers from user intent
 - expose tool JSON schemas to the model
 - execute requested tools safely and consistently
+
+## RAG-Enabled Response Flow
+
+1. User asks a question in terminal/web UI.
+2. If RAG is enabled for that session, UI requests retrieved context from `RAGPipeline`.
+3. Pipeline embeds query and retrieves top-k chunks from in-memory Qdrant.
+4. UI injects retrieved context as an additional system message.
+5. UI forwards messages to `OpenRouterClient.send_chat`.
+6. Model answers grounded on supplied RAG context.
 
 ## Tool Calling Flow
 
@@ -80,6 +111,6 @@ Responsibilities:
 
 - **Separation of concerns**: each folder has a single responsibility.
 - **Replaceable UIs**: terminal/web can evolve independently.
-- **Reliable tooling**: deterministic date/time and Exa search hooks improve factual accuracy.
+- **Runtime control**: users can turn RAG on/off without restarting.
+- **Reliable grounding**: in-memory vector retrieval supplies local knowledge context.
 - **Testability**: each layer can be mocked and tested independently.
-

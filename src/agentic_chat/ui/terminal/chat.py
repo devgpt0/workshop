@@ -2,6 +2,7 @@ import requests
 
 from agentic_chat.externals.openrouter import OpenRouterClient
 from agentic_chat.core.modes import MODE_DETAILS, SessionState, build_messages
+from agentic_chat.rag.pipeline import RAGPipeline, build_rag_message
 from agentic_chat.ui.terminal.view import print_chat_help, show_welcome_screen
 
 
@@ -16,15 +17,46 @@ MODE_ALIASES = {
 }
 
 
+def _build_messages_with_rag(
+    system_prompt: str,
+    conversation: list[dict[str, str]],
+    rag_pipeline: RAGPipeline | None,
+    use_rag: bool = True,
+) -> list[dict[str, str]]:
+    messages = build_messages(system_prompt=system_prompt, conversation=conversation)
+    if not rag_pipeline or not use_rag:
+        return messages
+
+    last_user_text = ""
+    for item in reversed(conversation):
+        if item.get("role") == "user":
+            last_user_text = str(item.get("content") or "")
+            break
+
+    if not last_user_text:
+        return messages
+
+    context = rag_pipeline.build_context(last_user_text)
+    if not context:
+        return messages
+
+    return [messages[0], build_rag_message(context), *messages[1:]]
+
+
 def run_single_prompt(
-    prompt: str, client: OpenRouterClient, state: SessionState
+    prompt: str,
+    client: OpenRouterClient,
+    state: SessionState,
+    rag_pipeline: RAGPipeline | None = None,
 ) -> int:
     try:
         reply = client.send_chat(
             model=state.current_model,
-            messages=build_messages(
+            messages=_build_messages_with_rag(
                 system_prompt=state.system_prompt,
                 conversation=[{"role": "user", "content": prompt}],
+                rag_pipeline=rag_pipeline,
+                use_rag=bool(rag_pipeline),
             ),
         )
     except (requests.RequestException, RuntimeError) as exc:
@@ -192,6 +224,8 @@ def handle_command(
     user_input: str,
     messages: list[dict[str, str]],
     state: SessionState,
+    rag_pipeline: RAGPipeline | None = None,
+    rag_runtime: dict[str, bool] | None = None,
 ) -> bool:
     parts = user_input.split(maxsplit=2)
     command = parts[0].lower()
@@ -273,6 +307,46 @@ def handle_command(
         )
         return True
 
+    if command == "/rag":
+        if not rag_pipeline:
+            print("System > RAG is disabled.")
+            return True
+
+        if rag_runtime is None:
+            rag_runtime = {"enabled": True}
+
+        if len(parts) == 1 or parts[1].lower() == "status":
+            stats = rag_pipeline.stats
+            status = "ready" if rag_pipeline.indexed else "empty"
+            answer_mode = "on" if rag_runtime.get("enabled", True) else "off"
+            print(
+                "System > "
+                f"RAG {status}. Files: {stats.files_indexed}, Chunks: {stats.chunks_indexed}, "
+                f"Answering with RAG: {answer_mode}"
+            )
+            return True
+
+        action = parts[1].lower()
+        if action == "reindex":
+            stats = rag_pipeline.index_data()
+            print(
+                f"System > RAG reindexed. Files: {stats.files_indexed}, Chunks: {stats.chunks_indexed}"
+            )
+            return True
+
+        if action == "on":
+            rag_runtime["enabled"] = True
+            print("System > RAG answering is ON for this session.")
+            return True
+
+        if action == "off":
+            rag_runtime["enabled"] = False
+            print("System > RAG answering is OFF for this session.")
+            return True
+
+        print("System > Use /rag, /rag status, /rag reindex, /rag on, or /rag off")
+        return True
+
     if command == "/help":
         print_chat_help()
         return True
@@ -284,8 +358,11 @@ def run_interactive_chat(
     client: OpenRouterClient,
     state: SessionState,
     no_effect: bool,
+    rag_pipeline: RAGPipeline | None = None,
 ) -> int:
     messages: list[dict[str, str]] = []
+    rag_runtime: dict[str, bool] = {"enabled": bool(rag_pipeline)}
+
     show_welcome_screen(
         model=state.current_model, mode=state.current_mode, no_effect=no_effect
     )
@@ -309,7 +386,7 @@ def run_interactive_chat(
             return 0
 
         if user_input.startswith("/"):
-            if handle_command(user_input, messages, state):
+            if handle_command(user_input, messages, state, rag_pipeline, rag_runtime):
                 continue
 
         messages.append({"role": "user", "content": user_input})
@@ -317,7 +394,12 @@ def run_interactive_chat(
         try:
             reply = client.send_chat(
                 model=state.current_model,
-                messages=build_messages(state.system_prompt, messages),
+                messages=_build_messages_with_rag(
+                    state.system_prompt,
+                    messages,
+                    rag_pipeline,
+                    use_rag=rag_runtime.get("enabled", True),
+                ),
             )
         except (requests.RequestException, RuntimeError) as exc:
             messages.pop()

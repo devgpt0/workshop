@@ -1,12 +1,12 @@
-﻿# Agentic Chat
+# Agentic Chat
 
 Agentic Chat is a Python application with two UIs:
 - Terminal chat UI
 - Browser chat UI (Streamlit)
 
-It uses OpenRouter for model responses and supports tool-calling for:
-- Web search/research via Exa
-- Reliable current date/time answers
+It uses OpenRouter for model responses and supports:
+- Tool-calling (Exa web search + deterministic date/time)
+- RAG grounding with in-memory Qdrant and OpenRouter embeddings
 
 ## Source Structure
 
@@ -19,13 +19,18 @@ src/
       entrypoint.py
       terminal.py
       web.py
-    externals/
-      __init__.py
-      openrouter.py
     core/
       __init__.py
       config.py
       modes.py
+    externals/
+      __init__.py
+      openrouter.py
+    rag/
+      __init__.py
+      bootstrap.py
+      embeddings.py
+      pipeline.py
     tools/
       __init__.py
       datetime_tool.py
@@ -40,39 +45,69 @@ src/
       web/
         __init__.py
         streamlit_app.py
+docs/
+  architecture.md
+scripts/
+  run_check.bat
+  run_check.sh
+tests/
+  test_*.py
+rag/
+  data/
+    README.md
+    fairy_tale_rag.md
+    fairy_tale_rag_chunks/
+      chunk_01.md
+      chunk_02.md
+      ...
 ```
 
 ## What Each Folder Does
 
-- `app/`
-  - Application entrypoints and startup orchestration.
-  - `entrypoint.py` routes `agentic-chat` flags to terminal or web launcher.
-  - `terminal.py` is terminal-only startup and chat execution.
-  - `web.py` is web-only startup (Streamlit launcher).
+- `src/agentic_chat/app/`
+  - Application entrypoints and launch routing.
+  - `entrypoint.py` switches between terminal and web modes.
 
-- `externals/`
-  - Integrations with external services.
-  - `openrouter.py` manages OpenRouter API calls and the tool-calling loop.
+- `src/agentic_chat/core/`
+  - Core state/config models.
+  - Loads env settings, modes, and session defaults.
 
-- `core/`
-  - Core domain logic and shared models.
-  - `config.py` loads/validates environment settings.
-  - `modes.py` defines available chat modes and session-state behavior.
+- `src/agentic_chat/externals/`
+  - External API clients.
+  - Handles OpenRouter request/response + tool-call loop.
 
-- `tools/`
-  - Tool-call implementations and routing.
-  - `exa_tool.py` runs Exa web search via `exa-py`.
-  - `datetime_tool.py` provides deterministic current date/time.
-  - `registry.py` decides which tool to trigger and dispatches execution.
+- `src/agentic_chat/rag/`
+  - RAG implementation.
+  - Embedding client, in-memory Qdrant indexing, retrieval pipeline, and bootstrap wiring.
 
-- `ui/terminal/`
-  - Terminal interface behavior and rendering.
-  - `chat.py` contains interactive command/chat loop.
-  - `view.py` contains welcome screen + help rendering.
+- `src/agentic_chat/tools/`
+  - Tool schemas + tool execution.
+  - Includes Exa search and date/time tools used by the LLM.
 
-- `ui/web/`
-  - Streamlit browser UI.
-  - `streamlit_app.py` contains web chat session flow.
+- `src/agentic_chat/ui/terminal/`
+  - Terminal UX and commands.
+  - Includes runtime RAG controls (`/rag on|off|status|reindex`).
+
+- `src/agentic_chat/ui/web/`
+  - Streamlit web UI.
+  - Includes sidebar RAG toggle and reindex button.
+
+- `docs/`
+  - Project documentation.
+  - `architecture.md` explains layers and request flow.
+
+- `scripts/`
+  - Developer quality-check scripts for Windows and Bash.
+
+- `tests/`
+  - Unit tests for app entrypoints, chat flow, tools, config, and UI behavior.
+
+- `rag/data/`
+  - Knowledge-base files consumed by RAG indexing.
+  - Store Markdown/text/json/csv/rst files here.
+
+- `rag/data/fairy_tale_rag_chunks/`
+  - Example of pre-split content chunks to improve retrieval quality.
 
 ## Setup
 
@@ -91,16 +126,33 @@ OPENROUTER_MODELS=openrouter/free,openai/gpt-oss-20b:free,openai/gpt-oss-120b:fr
 OPENROUTER_TIMEOUT=30
 OPENROUTER_SITE_URL=
 OPENROUTER_SITE_NAME=
+OPENROUTER_EMBEDDING_MODEL=openai/text-embedding-3-small
+
 EXA_API_KEY=your_exa_api_key_here
 EXA_NUM_RESULTS=5
+
+RAG_ENABLED=1
+RAG_DATA_DIR=rag/data
+RAG_TOP_K=4
+RAG_CHUNK_SIZE=800
+RAG_CHUNK_OVERLAP=120
+
 WORKSHOP_NO_EFFECT=0
 ```
 
-3. Install dependencies:
+3. Put your knowledge files (`.md`, `.txt`, `.json`, `.csv`, `.rst`) into `rag/data`.
+
+4. Install dependencies:
 
 ```bash
 uv sync
 ```
+
+## RAG Data Notes
+
+- Prefer Markdown files for better readability and retrieval quality.
+- Keep long stories/content split into multiple chunk files under a folder like `rag/data/<topic>_chunks/`.
+- Qdrant index is in-memory, so restart requires reindexing.
 
 ## Run Terminal UI
 
@@ -108,11 +160,21 @@ uv sync
 uv run agentic-chat --terminal
 ```
 
+Terminal RAG commands:
+- `/rag` or `/rag status` shows indexed file/chunk counts and RAG on/off state
+- `/rag on` enables RAG-grounded answers
+- `/rag off` disables RAG-grounded answers
+- `/rag reindex` rebuilds the in-memory Qdrant index from `rag/data`
+
 ## Run Browser UI
 
 ```bash
 uv run agentic-chat --web
 ```
+
+Web sidebar controls:
+- `Use RAG for answers` toggle enables/disables RAG per session
+- `Reindex RAG` rebuilds in-memory index and updates chunk/file counts in UI
 
 ## Quality Checks
 
@@ -127,9 +189,3 @@ Bash:
 ```bash
 bash scripts/run_check.sh
 ```
-
-Both scripts run:
-- `uv run ruff format --check .`
-- `uv run ruff check .`
-- `uv run pytest -q`
-
