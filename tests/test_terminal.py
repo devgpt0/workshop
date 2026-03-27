@@ -30,7 +30,7 @@ def test_main_terminal_prompt_uses_single_prompt(
 
     calls: dict[str, str] = {}
 
-    def fake_run_single_prompt(prompt: str, client, state) -> int:
+    def fake_run_single_prompt(prompt: str, client, state, rag_pipeline=None) -> int:
         calls["prompt"] = prompt
         calls["model"] = state.current_model
         return 0
@@ -53,7 +53,7 @@ def test_main_interactive_mode_when_no_prompt(monkeypatch: pytest.MonkeyPatch) -
 
     called = {"interactive": False}
 
-    def fake_run_interactive_chat(*, client, state, no_effect: bool) -> int:
+    def fake_run_interactive_chat(*, client, state, no_effect: bool, rag_pipeline=None) -> int:
         called["interactive"] = True
         return 0
 

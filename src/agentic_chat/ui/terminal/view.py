@@ -157,4 +157,7 @@ def print_chat_help() -> None:
     print("  /system <text>                Set the system prompt directly")
     print("  /system reset                 Reset the system prompt")
     print("  /clear                        Start a fresh conversation")
+    print("  /rag                          Show RAG index status")
+    print("  /rag on|off                   Enable or disable RAG for answers")
+    print("  /rag reindex                  Rebuild RAG index from rag/data")
     print("  /exit                         Quit the chat")

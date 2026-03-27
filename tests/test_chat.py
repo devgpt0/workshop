@@ -1,11 +1,13 @@
 import requests
 
+from agentic_chat.core.modes import SessionState
+from agentic_chat.rag.pipeline import RAGContext, RAGStats
 from agentic_chat.ui.terminal.chat import (
+    _build_messages_with_rag,
     handle_command,
     normalize_mode,
     run_single_prompt,
 )
-from agentic_chat.core.modes import SessionState
 
 
 class StubClient:
@@ -32,6 +34,19 @@ class StubClient:
         return self.reply
 
 
+class FakeRAGPipeline:
+    def __init__(self, context: RAGContext | None = None) -> None:
+        self._context = context
+        self.stats = RAGStats(files_indexed=1, chunks_indexed=2)
+        self.indexed = True
+
+    def build_context(self, query: str) -> RAGContext | None:
+        return self._context
+
+    def index_data(self) -> RAGStats:
+        return self.stats
+
+
 def _state() -> SessionState:
     return SessionState(
         current_mode="chat",
@@ -45,6 +60,24 @@ def test_normalize_mode_accepts_alias_and_index() -> None:
     assert normalize_mode("2") == "plan"
     assert normalize_mode("9") is None
     assert normalize_mode("browser") is None
+
+
+def test_build_messages_with_rag_injects_context() -> None:
+    messages = _build_messages_with_rag(
+        system_prompt="base system",
+        conversation=[{"role": "user", "content": "What is policy?"}],
+        rag_pipeline=FakeRAGPipeline(
+            context=RAGContext(
+                text="[1] Source: rag/data/policy.md (chunk 0)\\nPolicy text",
+                hits=1,
+                sources=("rag/data/policy.md",),
+            )
+        ),
+    )
+
+    assert messages[0]["role"] == "system"
+    assert messages[1]["role"] == "system"
+    assert "RAG CONTEXT" in messages[1]["content"]
 
 
 def test_run_single_prompt_success_prints_reply(capsys) -> None:
@@ -105,3 +138,16 @@ def test_handle_command_system_reset_clears_messages() -> None:
     assert handled is True
     assert messages == []
     assert "custom" not in state.system_prompt
+
+
+def test_handle_command_rag_toggle_updates_runtime_state() -> None:
+    state = _state()
+    messages: list[dict[str, str]] = []
+    rag_runtime = {"enabled": True}
+    rag_pipeline = FakeRAGPipeline()
+
+    assert handle_command("/rag off", messages, state, rag_pipeline, rag_runtime) is True
+    assert rag_runtime["enabled"] is False
+
+    assert handle_command("/rag on", messages, state, rag_pipeline, rag_runtime) is True
+    assert rag_runtime["enabled"] is True
